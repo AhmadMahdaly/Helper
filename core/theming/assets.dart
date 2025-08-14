@@ -1,1 +1,0 @@
-gen flutter_assets
