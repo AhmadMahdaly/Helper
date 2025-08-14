@@ -18,74 +18,43 @@ import 'package:hr_app/core/routing/routes.dart';
 import 'package:hr_app/core/theming/themes.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await setupGetIt();
-
-  await EasyLocalization.ensureInitialized();
-  await DioFactory.init();
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-
-  await CacheHelper.init();
-
-  Bloc.observer = MyBlocObserver();
-  userToken = await CacheHelper.getSecuredString(key: CacheKeys.userToken);
-
-  log("User Token : $userToken");
-  log("fcm Token : ${CacheHelper.getData(key: CacheKeys.deviceToken)}");
-
-  runApp(
-    EasyLocalization(
-      saveLocale: true,
-      useFallbackTranslations: true,
-      fallbackLocale: const Locale('en', 'UK'),
-      supportedLocales: const [
-        Locale('ar', 'EG'),
-        Locale('en', 'UK'),
-      ],
-      path: 'assets/languages',
-      child: Phoenix(
-        child: const HrApp(),
-      ),
-    ),
-  );
+initializeApp();
+  runApp(const MyApp());
 }
 
-class HrApp extends StatelessWidget {
-  const HrApp({super.key});
-
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return ScreenUtilInit(
-      designSize: const Size(375, 812),
-      minTextAdapt: true,
-      child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: const SystemUiOverlayStyle(
-          statusBarBrightness: Brightness.light,
-        ),
-        child: Builder(
-          builder: (context) {
-            return MaterialApp(
-              title: 'AppName'.tr(),
-              debugShowCheckedModeBanner: false,
-              navigatorKey: navigatorKey,
-              localizationsDelegates: context.localizationDelegates,
-              supportedLocales: context.supportedLocales,
-              locale: context.locale,
-              theme: lightTheme,
-              darkTheme: lightTheme,
-              themeMode: ThemeMode.light,
-              initialRoute: userToken == null
-                  ? Routes.loginScreen
-                  : Routes.mainlayoutScreen,
-              onGenerateRoute: AppRouter().generateRoute,
-              builder: EasyLoading.init(),
-            );
-          },
-        ),
+    SizeConfig.init(context);
+    return GestureDetector(
+      onTap: () => unfocusScope(context),
+      child: MaterialApp.router(
+        title: 'My App',
+        debugShowCheckedModeBanner: false,
+        routerConfig: RouterGenerationConfig.goRouter,
+        theme: Appthemes.lightTheme(),
       ),
     );
   }
 }
+
+void unfocusScope(BuildContext context) {
+  final currentFocus = FocusScope.of(context);
+  if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
+    currentFocus.unfocus();
+  }
+}
+
+/// --> core/init/initializer.dart
+Future<void> initializeApp() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await CacheHelper.init();
+  await setupGetIt();
+  // Bloc.observer = MyBlocObserver();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+}
+
