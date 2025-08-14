@@ -1,87 +1,101 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'cache_values.dart';
+// ملف يحتوي على مفاتيح التخزين
+// import 'package:.../core/cache_helper/cache_values.dart';
+class CacheKeys {
+  static const String currentLanguage = 'currentLanguage';
+}
 
+
+/// كلاس مساعد لإدارة التخزين المحلي باستخدام SharedPreferences و FlutterSecureStorage.
+/// يجب استدعاء `CacheHelper.init()` في ملف main.dart قبل تشغيل التطبيق.
 class CacheHelper {
-  /// Shared Preferences
-  static late SharedPreferences sharedPreferences;
+  CacheHelper._();
 
-  static init() async {
-    sharedPreferences = await SharedPreferences.getInstance();
+  static SharedPreferences? _sharedPreferences;
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
+
+  static Future<void> init() async {
+    _sharedPreferences = await SharedPreferences.getInstance();
   }
 
-  static dynamic getData({
-    required String key,
-  }) {
-    return sharedPreferences.get(key);
+  static void _checkInstance() {
+    if (_sharedPreferences == null) {
+      throw Exception(
+          "CacheHelper not initialized. Call CacheHelper.init() in your main.dart");
+    }
   }
 
-  static bool isEnglish() => getCurrentLanguage() == "en";
+  /// --- Language Management ---
 
-  static Future<void> changeLanguageToEn() async {
-    await CacheHelper.saveData(key: CacheKeys.currentLanguage, value: "en");
+  static Future<void> setLanguage(String langCode) async {
+    await set(CacheKeys.currentLanguage, langCode);
   }
 
-  static String getCurrentLanguage() {
-    return CacheHelper.getData(
-          key: CacheKeys.currentLanguage,
-        ) ??
-        "en";
+  static String getLanguage() {
+    return get<String>(CacheKeys.currentLanguage) ?? 'en';
   }
 
-  static Future<void> changeLanguageToAr() async {
-    await CacheHelper.saveData(key: CacheKeys.currentLanguage, value: "ar");
+  static bool isEnglish() => getLanguage() == 'en';
+
+
+  /// --- Generic SharedPreferences Methods ---
+
+  static Future<bool> set(String key, dynamic value) async {
+    _checkInstance();
+    if (value is String) return await _sharedPreferences!.setString(key, value);
+    if (value is int) return await _sharedPreferences!.setInt(key, value);
+    if (value is bool) return await _sharedPreferences!.setBool(key, value);
+    if (value is double) return await _sharedPreferences!.setDouble(key, value);
+    return false; // نوع غير مدعوم
   }
 
-  static Future<bool> saveData({
-    required String key,
-    required dynamic value,
-  }) async {
-    if (value is String) return await sharedPreferences.setString(key, value);
-    if (value is int) return await sharedPreferences.setInt(key, value);
-    if (value is bool) return await sharedPreferences.setBool(key, value);
-
-    return await sharedPreferences.setDouble(key, value);
-  }
-
-  static Future<bool> removeData({
-    required String key,
-  }) async {
-    return await sharedPreferences.remove(key);
-  }
-
-  static Future<bool> clearAllData() async {
-    return await sharedPreferences.clear();
-  }
-  
-/// Flutter Secure Storage
-  static Future saveSecuredString({
-    required String key,
-    required dynamic value,
-  }) async {
-    const flutterSecureStorage = FlutterSecureStorage();
-    debugPrint(
-        "FlutterSecureStorage : setSecuredString with key : $key and value : $value");
-    await flutterSecureStorage.write(key: key, value: value.toString());
-  }
-
-  static Future getSecuredString({
-    required String key,
-  }) async {
-    const flutterSecureStorage = FlutterSecureStorage();
-    debugPrint('FlutterSecureStorage : getSecuredString with key :');
+  static T? get<T>(String key) {
+    _checkInstance();
     try {
-      return await flutterSecureStorage.read(key: key);
+      return _sharedPreferences!.get(key) as T?;
     } catch (e) {
       return null;
     }
   }
 
-  static Future clearAllSecuredData() async {
-    debugPrint('FlutterSecureStorage : all data has been cleared');
-    const flutterSecureStorage = FlutterSecureStorage();
-    await flutterSecureStorage.deleteAll();
+  static Future<bool> remove(String key) async {
+    _checkInstance();
+    return await _sharedPreferences!.remove(key);
+  }
+
+  static Future<bool> clear() async {
+    _checkInstance();
+    return await _sharedPreferences!.clear();
+  }
+
+
+  /// --- Secure Storage Methods ---
+
+  static Future<void> setSecured(String key, String value) async {
+    if (kDebugMode) {
+      print('FlutterSecureStorage: Writing key: $key');
+    }
+    await _secureStorage.write(key: key, value: value);
+  }
+
+  static Future<String?> getSecured(String key) async {
+    if (kDebugMode) {
+      print('FlutterSecureStorage: Reading key: $key');
+    }
+    return await _secureStorage.read(key: key);
+  }
+  
+  static Future<void> removeSecured(String key) async {
+    await _secureStorage.delete(key: key);
+  }
+
+  static Future<void> clearSecured() async {
+    if (kDebugMode) {
+      print('FlutterSecureStorage: Clearing all data');
+    }
+    await _secureStorage.deleteAll();
   }
 }
