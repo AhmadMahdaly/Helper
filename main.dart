@@ -1,21 +1,8 @@
-import 'dart:developer';
-
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:flutter_phoenix/flutter_phoenix.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:hr_app/core/bloc_observer.dart';
-import 'package:hr_app/core/cache_helper/cache_helper.dart';
-import 'package:hr_app/core/cache_helper/cache_values.dart';
-import 'package:hr_app/core/constants.dart';
-import 'package:hr_app/core/di.dart';
-import 'package:hr_app/core/networking/dio_factory.dart';
-import 'package:hr_app/core/routing/app_router.dart';
-import 'package:hr_app/core/routing/routes.dart';
-import 'package:hr_app/core/theming/themes.dart';
+import 'package:.../core/routing/app_router.dart';
+import 'package:.../core/routing/routes.dart';
+import 'package:.../core/theming/themes.dart';
 
 void main() async {
 initializeApp();
